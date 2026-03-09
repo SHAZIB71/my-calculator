@@ -84,40 +84,61 @@
     </div>
 
     <script>
-        const screen = document.getElementById('result');
-        const histDiv = document.getElementById('hist-list');
+    const disp = document.getElementById('display');
+    const histList = document.getElementById('hist-list');
 
-        function add(v) { screen.value += v; }
-        function clearScr() { screen.value = ""; }
-        function backspace() { screen.value = screen.value.slice(0, -1); }
-
-        function solve() {
-            try {
-                let expression = screen.value;
-                let ans = eval(expression);
-                
-                // History mein save karna
-                if (expression != "") {
-                    let newItem = document.createElement('div');
-                    newItem.className = 'history-item';
-                    newItem.innerHTML = `${expression} = <b>${ans}</b>`;
-                    
-                    // Agar "No history yet" likha hai toh use mita dein
-                    if(histDiv.firstChild.tagName === 'P') histDiv.innerHTML = "";
-                    
-                    histDiv.insertBefore(newItem, histDiv.firstChild);
-                }
-                
-                screen.value = ans;
-            } catch {
-                screen.value = "Error";
-            }
+    // 1. Page load hote hi purani history browser se nikalna
+    window.onload = function() {
+        const savedData = localStorage.getItem('shazibCalcData');
+        if (savedData) {
+            histList.innerHTML = savedData;
+            // "No history" waale message ko hatana agar data mil gaya toh
+            const emptyMsg = document.getElementById('empty-msg');
+            if(emptyMsg) emptyMsg.remove();
         }
+    };
 
-        function clearHistory() {
-            histDiv.innerHTML = '<p style="font-size: 12px; color: #64748b;">No history yet</p>';
+    function add(v) { 
+        if(disp.value === "Error") disp.value = "";
+        disp.value += v; 
+    }
+
+    function clearScr() { disp.value = ""; }
+    function back() { disp.value = disp.value.slice(0, -1); }
+
+    function solve() {
+        try {
+            let expression = disp.value;
+            if(expression === "") return;
+            let result = eval(expression);
+            
+            // History item banana
+            let item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<span>${expression}</span><b>= ${result}</b>`;
+            
+            const emptyMsg = document.getElementById('empty-msg');
+            if(emptyMsg) emptyMsg.remove();
+
+            histList.insertBefore(item, histList.firstChild);
+            
+            // 2. Browser memory (LocalStorage) mein save karna
+            localStorage.setItem('shazibCalcData', histList.innerHTML);
+
+            disp.value = result;
+        } catch {
+            disp.value = "Error";
+            setTimeout(clearScr, 1000);
         }
-    </script>
+    }
 
-</body>
-</html>
+    function clearHistory() {
+        if(confirm("Kya aap saari history mitaana chahte hain?")) {
+            histList.innerHTML = '<p id="empty-msg" style="color:#64748b; text-align: center;">No calculations yet</p>';
+            // 3. Memory se bhi delete karna
+            localStorage.removeItem('shazibCalcData');
+        }
+    }
+</script>
+</body>    
+</html>    
